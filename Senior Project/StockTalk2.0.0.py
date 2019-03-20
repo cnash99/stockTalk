@@ -39,7 +39,7 @@ company_table = pd.read_csv("companylist.csv")
 today = datetime.datetime.today().strftime('%Y-%m-%d')
 week_ago = datetime.datetime.utcnow()-datetime.timedelta(days = 7)
 
-#Ask user to search for a company
+#------------------------------------------------Ask user to search for a company---------------------------------------
 print("Please enter the symbol of a NASDAQ company: ")
 symbol = str(input())
 symbol = symbol.upper()
@@ -52,7 +52,7 @@ except:
 
 stock = stockerAPI.Stocker(symbol)
 
-#Populate tweets
+#------------------------------------------------Populate Datasets-------------------------------------------------------
 twitter_API.main(company)
 
 #Read two input csv files
@@ -64,7 +64,7 @@ stockData.loc[:,'date'] = pd.to_datetime(stockData.loc[:,'date'])
 lastSeven = stockData.loc[:,'date'].map(lambda x: x>week_ago)
 stocksLastSeven = stockData.loc[lastSeven,:]
 
-#Create predictions based on legacy data
+#------------------------------------------------Create predictions-------------------------------------------------------
 stock.predict_future()
 
 #Collect data on tweet volume, percentage of positive tweets, and percentage of negative tweets
@@ -81,7 +81,7 @@ currentPrice = lastRow.loc['4. close']
 
 #Adjust trend
 predictions = pd.read_csv("predictions.csv")
-diff = predictions.iloc[0, 18] - predictions.iloc[0, 1]
+diff = predictions.iloc[0, 3] - predictions.iloc[0, 1]
 predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'].map(lambda x: x+diff)
 
 #Get data for predicting stock price
@@ -89,32 +89,45 @@ estimate = predictions.loc[:, "estimate"]
 trend = predictions.loc[:, "trend"]
 change = predictions.loc[:, "change"]
 
-#Adjust estimates for Twitter data
-overallPerception= (percentPos - percentNeg)/100
+#------------------------------------------------Adjust estimates for Twitter data---------------------------------------
+overallPerception = (percentPos - percentNeg)/100
 if(overallPerception>0):
-    predictions.loc[:, "twitter change"] = change.map(lambda x: x + (abs(x) * overallPerception))
+    predictions.loc[:, "twitter change"] = change.map(lambda x: x + abs(abs(x) * overallPerception*10))
 elif(overallPerception<0):
-    predictions.loc[:, "twitter change"] = change.map(lambda x: x - (abs(x) * overallPerception))
+    predictions.loc[:, "twitter change"] = change.map(lambda x: x - abs(abs(x) * overallPerception))
 else:
     predictions.loc[:, "twitter change"] = 0
-    
-predictions.to_csv("predictions.csv", index=False)
+
+#Find posTweetLikes & posTweetRT
+positiveTweets = tweets.loc[:, 'positive'].map(lambda x: x == 1)
+posTweetLikes = tweets.loc[positiveTweets,'fav_count'].sum()
+posTweetRT = tweets.loc[positiveTweets,'retweet_count'].sum()
+
+#Find negTweetLikes & negTweetRT
+negativeTweets = tweets.loc[:, 'negative'].map(lambda x: x == 1)
+negTweetLikes = tweets.loc[negativeTweets,'fav_count'].sum()
+negTweetRT = tweets.loc[negativeTweets,'retweet_count'].sum()
+
+#Find netLikes and netRT
+netLikes = posTweetLikes - negTweetLikes
+netRT = posTweetRT - negTweetRT
 
 predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'] + (predictions.loc[:, 'twitter change'] - predictions.loc[:, 'change'])
+predictions.to_csv("predictions.csv", index=False)
 
-#Logic for advice
+#------------------------------------------------Logic for advice-------------------------------------------------------
 predictions.loc[:,'percentChange'] = predictions.loc[:, 'trend'].map(lambda x: x/currentPrice)
 percentChange = predictions.loc[:,'percentChange'].tail(1).values[0]
 numPredictions = predictions.loc[:,'percentChange'].count()
 
-if(percentChange > 1.01):
+if(percentChange > 1.02):
     advice = 'BUY'
-elif(percentChange < .99):
+elif(percentChange < .98):
     advice = 'SELL'
 else:
     advice = 'HOLD'
 
-#Print Results
+#------------------------------------------------Print Results-------------------------------------------------------
 percentPos = round(percentPos, 2)
 percentNeg = round(percentNeg, 2)
 predictedPrices = predictions.loc[:, "trend"]
@@ -136,8 +149,8 @@ if(advice == 'BUY'):
     print("We suggest that you", advice, "more shares of this stock.")
 else:
     print("We suggest that you", advice, "your shares of this stock.")
-    
-#Print graph
+
+#------------------------------------------------Print graph-------------------------------------------------------
 graphDf1 = pd.DataFrame(columns = {'date', 'price'})
 graphDf1.loc[:, 'date'] = stocksLastSeven.loc[:, 'date']
 graphDf1.loc[:, 'price'] = stocksLastSeven.loc[:, '4. close']
