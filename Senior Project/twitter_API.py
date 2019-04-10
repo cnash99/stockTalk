@@ -21,9 +21,9 @@ def main(name):
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     week_ago = datetime.datetime.utcnow()-datetime.timedelta(days = 7)
     
-    APP_KEY = "2a9hn9IPMnqG47NcQi2DXYnvV"
-    APP_SECRET = "YJLjqNfllHpknn3v5tTK2VpsP8kvVBPtuvYdBCn8Bf8YadWPOg"           
-    ACCESS_TOKEN = "AAAAAAAAAAAAAAAAAAAAANrD9QAAAAAAa9GI6S884DtSyV0mMQzdP7VJq%2BI%3DEdKiIATJXO4E5t0vX7QpHS5S68kQM1DTpuYi4rGOIsIDiisg2g"
+    APP_KEY = ###
+    APP_SECRET = ####       
+    ACCESS_TOKEN = ####
     twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
     
     #Clear tweets.csv
