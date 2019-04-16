@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import re
 
 import twitter_credentials
 import twitter_API
@@ -21,180 +22,189 @@ from sklearn import preprocessing
 #from iexfinance import Stock
 #from iexfinance import get_historical_data
 
-def run(name):
-   #Clear csv files to start fresh
-   # opening the file with w+ mode truncates the file
-   f = open("tweets.csv", "w+")
-   f.truncate()
-   f.close()
-   f = open("stockdata.csv", "w+")
-   f.truncate()
-   f.close()
-   f = open("predictions.csv", "w+")
-   f.truncate()
-   f.close()
-
-
+def getSymbols():
    company_table = pd.read_csv("file:///Users/charlienash/stockTalk/companylist.csv")
-   today = datetime.datetime.today().strftime('%Y-%m-%d')
-   week_ago = datetime.datetime.utcnow()-datetime.timedelta(days = 7)
+   stockSymbols = (company_table.loc[:, "Symbol"]).tolist()
+   return stockSymbols
 
-   #------------------------------------------------Ask user to search for a company---------------------------------------
-   print("Please enter the symbol of a NASDAQ company: ")
-   symbol = str(name)
-   symbol = symbol.upper()
-   try:
-      companyRow = company_table.loc[:, "Symbol"] == symbol
-      company = company_table.loc[companyRow, "Name"].item()
-   except:
-      print("Error: Symbol is not recognized. Please enter a valid NASDAQ trading symbol.")
-      sys.exit()
 
-   stock = stockerAPI.Stocker(symbol)
+def run(name):
+  #Clear csv files to start fresh
+  # opening the file with w+ mode truncates the file
+  f = open("tweets.csv", "w+")
+  f.truncate()
+  f.close()
+  f = open("stockdata.csv", "w+")
+  f.truncate()
+  f.close()
+  f = open("predictions.csv", "w+")
+  f.truncate()
+  f.close()
 
-   #------------------------------------------------Populate Datasets-------------------------------------------------------
-   twitter_API.main(company)
 
-   #Read two input csv files
-   tweets = pd.read_csv("tweets.csv")
-   stockData = pd.read_csv("stockdata.csv")
+  company_table = pd.read_csv("file:///Users/charlienash/stockTalk/companylist.csv")
+  today = datetime.datetime.today().strftime('%Y-%m-%d')
+  week_ago = datetime.datetime.utcnow()-datetime.timedelta(days = 7)
 
-   #Make dataframe of last week of stock data
-   stockData.loc[:,'date'] = pd.to_datetime(stockData.loc[:,'date'])
-   lastSeven = stockData.loc[:,'date'].map(lambda x: x>week_ago)
-   stocksLastSeven = stockData.loc[lastSeven,:]
+  #------------------------------------------------Ask user to search for a company---------------------------------------
+  print("Please enter the symbol of a NASDAQ company: ")
+  symbol = str(name)
+  symbol = re.sub("[,']",'',symbol)
+  symbol = symbol.strip("[]")
+  symbol = symbol.upper()
+  print(symbol)
+  try:
+     companyRow = company_table.loc[:, "Symbol"] == symbol
+     company = company_table.loc[companyRow, "Name"].item()
+  except:
+     print("Error: Symbol is not recognized. Please enter a valid NASDAQ trading symbol.")
+     sys.exit()
 
-   #------------------------------------------------Create predictions-------------------------------------------------------
-   stock.predict_future()
+  stock = stockerAPI.Stocker(symbol)
+  #------------------------------------------------Populate Datasets-------------------------------------------------------
+  twitter_API.main(company)
 
-   #Collect data on tweet volume, percentage of positive tweets, and percentage of negative tweets
-   totalVolume = tweets['id'].count()
-   posTweets = tweets.loc[:,'positive'].sum()
-   negTweets = tweets.loc[:, 'negative'].sum()
-   percentPos = (posTweets/totalVolume)*100
-   percentNeg = (negTweets/totalVolume)*100
+  #Read two input csv files
+  tweets = pd.read_csv("tweets.csv")
+  stockData = pd.read_csv("stockdata.csv")
 
-   #Get data for predicting stock price
-   lastIndex = stockData['date'].count()-1
-   lastRow = stockData.iloc[lastIndex, :]
-   currentPrice = lastRow.loc['4. close']
+  #Make dataframe of last week of stock data
+  stockData.loc[:,'date'] = pd.to_datetime(stockData.loc[:,'date'])
+  lastSeven = stockData.loc[:,'date'].map(lambda x: x>week_ago)
+  stocksLastSeven = stockData.loc[lastSeven,:]
 
-   #Adjust trend
-   predictions = pd.read_csv("predictions.csv")
-   diff = predictions.iloc[0, 3] - predictions.iloc[0, 1]
-   predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'].map(lambda x: x+diff)
+  #------------------------------------------------Create predictions-------------------------------------------------------
+  stock.predict_future()
 
-   #Get data for predicting stock price
-   estimate = predictions.loc[:, "estimate"]
-   trend = predictions.loc[:, "trend"]
-   change = predictions.loc[:, "change"]
+  #Collect data on tweet volume, percentage of positive tweets, and percentage of negative tweets
+  totalVolume = tweets['id'].count()
+  posTweets = tweets.loc[:,'positive'].sum()
+  negTweets = tweets.loc[:, 'negative'].sum()
+  percentPos = (posTweets/totalVolume)*100
+  percentNeg = (negTweets/totalVolume)*100
 
-   #------------------------------------------------Adjust estimates for Twitter data---------------------------------------
-   overallPerception = (percentPos - percentNeg)/100
-   if(overallPerception>0):
-      predictions.loc[:, "twitter change"] = change.map(lambda x: x + abs(abs(x) * overallPerception*10))
-   elif(overallPerception<0):
-      predictions.loc[:, "twitter change"] = change.map(lambda x: x - abs(abs(x) * overallPerception))
-   else:
-      predictions.loc[:, "twitter change"] = 0
+  #Get data for predicting stock price
+  lastIndex = stockData['date'].count()-1
+  lastRow = stockData.iloc[lastIndex, :]
+  currentPrice = lastRow.loc['4. close']
 
-   #Find posTweetLikes & posTweetRT
-   positiveTweets = tweets.loc[:, 'positive'].map(lambda x: x == 1)
-   posTweetLikes = tweets.loc[positiveTweets,'fav_count'].sum()
-   posTweetRT = tweets.loc[positiveTweets,'retweet_count'].sum()
+  #Adjust trend
+  predictions = pd.read_csv("predictions.csv")
+  diff = predictions.iloc[0, 3] - predictions.iloc[0, 1]
+  predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'].map(lambda x: x+diff)
 
-   #Find negTweetLikes & negTweetRT
-   negativeTweets = tweets.loc[:, 'negative'].map(lambda x: x == 1)
-   negTweetLikes = tweets.loc[negativeTweets,'fav_count'].sum()
-   negTweetRT = tweets.loc[negativeTweets,'retweet_count'].sum()
+  #Get data for predicting stock price
+  estimate = predictions.loc[:, "estimate"]
+  trend = predictions.loc[:, "trend"]
+  change = predictions.loc[:, "change"]
 
-   #Find netLikes and netRT
-   netLikes = posTweetLikes - negTweetLikes
-   netRT = posTweetRT - negTweetRT
+  #------------------------------------------------Adjust estimates for Twitter data---------------------------------------
+  overallPerception = (percentPos - percentNeg)/100
+  if(overallPerception>0):
+     predictions.loc[:, "twitter change"] = change.map(lambda x: x + abs(abs(x) * overallPerception*10))
+  elif(overallPerception<0):
+     predictions.loc[:, "twitter change"] = change.map(lambda x: x - abs(abs(x) * overallPerception))
+  else:
+     predictions.loc[:, "twitter change"] = 0
 
-   predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'] + (predictions.loc[:, 'twitter change'] - predictions.loc[:, 'change'])
-   predictions.to_csv("predictions.csv", index=False)
+  #Find posTweetLikes & posTweetRT
+  positiveTweets = tweets.loc[:, 'positive'].map(lambda x: x == 1)
+  posTweetLikes = tweets.loc[positiveTweets,'fav_count'].sum()
+  posTweetRT = tweets.loc[positiveTweets,'retweet_count'].sum()
 
-   #------------------------------------------------Logic for advice-------------------------------------------------------
-   predictions.loc[:,'percentChange'] = predictions.loc[:, 'trend'].map(lambda x: x/currentPrice)
-   percentChange = predictions.loc[:,'percentChange'].tail(1).values[0]
-   numPredictions = predictions.loc[:,'percentChange'].count()
+  #Find negTweetLikes & negTweetRT
+  negativeTweets = tweets.loc[:, 'negative'].map(lambda x: x == 1)
+  negTweetLikes = tweets.loc[negativeTweets,'fav_count'].sum()
+  negTweetRT = tweets.loc[negativeTweets,'retweet_count'].sum()
 
-   if(percentChange > 1.02):
-      advice = 'buy more'
-   elif(percentChange < .98):
-      advice = 'sell your'
-   else:
-      advice = 'hold your'
+  #Find netLikes and netRT
+  netLikes = posTweetLikes - negTweetLikes
+  netRT = posTweetRT - negTweetRT
 
-   #------------------------------------------------Print Results-------------------------------------------------------
-   percentPos = round(percentPos, 2)
-   percentNeg = round(percentNeg, 2)
-   predictedPrices = predictions.loc[:, "trend"]
-   predictedPrices = predictedPrices.map(lambda x: round(x, 2))
-   print("The current trading price of", company, "is", currentPrice, ".")
-   print("There have been", totalVolume, "tweets about", company, "in the past week.")
-   print("Of these tweets,", percentPos, "% speak about the company positively while", percentNeg, "% spoke negatively about the company.")
-   print("Based on our predictions, the trading prices of", company, "over the next week will be: ")
+  predictions.loc[:, 'trend'] = predictions.loc[:, 'trend'] + (predictions.loc[:, 'twitter change'] - predictions.loc[:, 'change'])
+  predictions.to_csv("predictions.csv", index=False)
 
-   i = 0
-   while(i<numPredictions):
-      predictRow = predictions.iloc[i, :]
-      d = predictRow['Date']
-      p = predictRow['trend']
-      print(d, ":", p)
-      i = i+1
+  #------------------------------------------------Logic for advice-------------------------------------------------------
+  predictions.loc[:,'percentChange'] = predictions.loc[:, 'trend'].map(lambda x: x/currentPrice)
+  percentChange = predictions.loc[:,'percentChange'].tail(1).values[0]
+  numPredictions = predictions.loc[:,'percentChange'].count()
 
-   if(numPredictions > 0):
-      firstDayPredict = predictions.iloc[0, 0] + ": " + predictions.iloc[0,1].astype(str)
-   else:
-      firstDayPredict = ''
-   if(numPredictions > 1):
-      secondDayPredict = predictions.iloc[1, 0] + ": " + predictions.iloc[1,1].astype(str)
-   else:
-      secondDayPredict = ''
-   if(numPredictions > 2):
-      thirdDayPredict = predictions.iloc[2, 0] + ": " + predictions.iloc[2,1].astype(str)
-   else:
-      thirdDayPredict = ''
-   if(numPredictions > 3):
-      fourthDayPredict = predictions.iloc[3, 0] + ": " + predictions.iloc[3,1].astype(str)
-   else:
-      fourthDayPredict = ''
-   if(numPredictions > 4):
-      fifthDayPredict = predictions.iloc[4, 0] + ": " + predictions.iloc[4,1].astype(str)
-   else:
-      fifthDayPredict = ''
-   if(numPredictions > 5):
-      sixthDayPredict = predictions.iloc[5, 0] + ": " + predictions.iloc[5,1].astype(str)
-   else:
-      sixthDayPredict = ''
-   if(numPredictions > 6):
-      seventhDayPredict = predictions.iloc[6, 0] + ": " + predictions.iloc[6,1].astype(str)
-   else:
-      seventhDayPredict = ''
+  if(percentChange > 1.02):
+     advice = 'buy more'
+  elif(percentChange < .98):
+     advice = 'sell your'
+  else:
+     advice = 'hold your'
 
-   if(advice == 'BUY MORE'):
-      print("We suggest that you", advice, "more shares of this stock.")
-   else:
-      print("We suggest that you", advice, "your shares of this stock.")
+  #------------------------------------------------Print Results-------------------------------------------------------
+  percentPos = round(percentPos, 2)
+  percentNeg = round(percentNeg, 2)
+  predictedPrices = predictions.loc[:, "trend"]
+  predictedPrices = predictedPrices.map(lambda x: round(x, 2))
+  print("The current trading price of", company, "is", currentPrice, ".")
+  print("There have been", totalVolume, "tweets about", company, "in the past week.")
+  print("Of these tweets,", percentPos, "% speak about the company positively while", percentNeg, "% spoke negatively about the company.")
+  print("Based on our predictions, the trading prices of", company, "over the next week will be: ")
 
-   #------------------------------------------------Print graph-------------------------------------------------------
-   graphDf1 = pd.DataFrame(columns = {'date', 'price'})
-   graphDf1.loc[:, 'date'] = stocksLastSeven.loc[:, 'date']
-   graphDf1.loc[:, 'price'] = stocksLastSeven.loc[:, '4. close']
+  i = 0
+  while(i<numPredictions):
+     predictRow = predictions.iloc[i, :]
+     d = predictRow['Date']
+     p = predictRow['trend']
+     print(d, ":", p)
+     i = i+1
 
-   graphDf2 = predictions.loc[:, {'Date', 'trend'}]
-   graphDf2.loc[:, 'price'] = predictions.loc[:, 'trend']
-   graphDf2.loc[:, 'date'] = predictions.loc[:, 'Date']
-   graphDf = graphDf1.append(graphDf2)
+  if(numPredictions > 0):
+     firstDayPredict = predictions.iloc[0, 0] + ": " + predictions.iloc[0,1].astype(str)
+  else:
+     firstDayPredict = ''
+  if(numPredictions > 1):
+     secondDayPredict = predictions.iloc[1, 0] + ": " + predictions.iloc[1,1].astype(str)
+  else:
+     secondDayPredict = ''
+  if(numPredictions > 2):
+     thirdDayPredict = predictions.iloc[2, 0] + ": " + predictions.iloc[2,1].astype(str)
+  else:
+     thirdDayPredict = ''
+  if(numPredictions > 3):
+     fourthDayPredict = predictions.iloc[3, 0] + ": " + predictions.iloc[3,1].astype(str)
+  else:
+     fourthDayPredict = ''
+  if(numPredictions > 4):
+     fifthDayPredict = predictions.iloc[4, 0] + ": " + predictions.iloc[4,1].astype(str)
+  else:
+     fifthDayPredict = ''
+  if(numPredictions > 5):
+     sixthDayPredict = predictions.iloc[5, 0] + ": " + predictions.iloc[5,1].astype(str)
+  else:
+     sixthDayPredict = ''
+  if(numPredictions > 6):
+     seventhDayPredict = predictions.iloc[6, 0] + ": " + predictions.iloc[6,1].astype(str)
+  else:
+     seventhDayPredict = ''
 
-   plt.clf()
-   plt.plot(graphDf.loc[:, 'date'], graphDf.loc[:, 'price'])  
-   title = "Past Week's Date and Next Week's Predictions of " + company
-   plt.title(title)
-   plt.xlabel("Date")
-   plt.ylabel("Trading Price")
+  if(advice == 'BUY MORE'):
+     print("We suggest that you", advice, "more shares of this stock.")
+  else:
+     print("We suggest that you", advice, "your shares of this stock.")
+
+  #------------------------------------------------Print graph-------------------------------------------------------
+  graphDf1 = pd.DataFrame(columns = {'date', 'price'})
+  graphDf1.loc[:, 'date'] = stocksLastSeven.loc[:, 'date']
+  graphDf1.loc[:, 'price'] = stocksLastSeven.loc[:, '4. close']
+
+  graphDf2 = predictions.loc[:, {'Date', 'trend'}]
+  graphDf2.loc[:, 'price'] = predictions.loc[:, 'trend']
+  graphDf2.loc[:, 'date'] = predictions.loc[:, 'Date']
+  graphDf = graphDf1.append(graphDf2)
+
+  plt.clf()
+  plt.plot(graphDf.loc[:, 'date'], graphDf.loc[:, 'price']) 
+  title = "Past Week's Date and Next Week's Predictions of " + company
+  plt.title(title)
+  plt.xlabel("Date")
+  plt.ylabel("Trading Price")
 #   plt.show()
-   plt.savefig("images/graph.png")
-   return {'company' : company, 'currentPrice' : currentPrice, 'totalVolume' : totalVolume, 'percentPos': percentPos, 'percentNeg' : percentNeg, 'first' : firstDayPredict, 'second' : secondDayPredict, 'third' : thirdDayPredict, 'fourth' : fourthDayPredict, 'fifth' : fifthDayPredict, 'sixth' : sixthDayPredict, 'seventh' : seventhDayPredict, 'advice' : advice}
+  fileName = "static/graph.jpg"
+  plt.savefig(fileName)
+  return {'company' : company, 'currentPrice' : currentPrice, 'totalVolume' : totalVolume, 'percentPos': percentPos, 'percentNeg' : percentNeg, 'first' : firstDayPredict, 'second' : secondDayPredict, 'third' : thirdDayPredict, 'fourth' : fourthDayPredict, 'fifth' : fifthDayPredict, 'sixth' : sixthDayPredict, 'seventh' : seventhDayPredict, 'advice' : advice}
