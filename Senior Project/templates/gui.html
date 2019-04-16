@@ -1,0 +1,47 @@
+<head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+      <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+      <style>
+         body{
+            background-color:#ccffff
+         }
+      </style>
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      </head>
+
+<html>
+   <body>
+      <form action = "http://localhost:5000/login" method = "post">
+         <br>
+         <div class="container" align = "center">
+             <img src="/static/logo.png" alt="logo">
+             <h2>Predict the Stock Market with Twitter API</h2>
+         <div>
+         </div>
+           <br>
+         <p>Please enter a NASDAQ Stock Symbol:</p>
+         <p><input type = "text" name = "nm" list ="symbols"/></p>
+         <p><input class="btn btn-primary" type = "submit" value = "Submit" onclick="$('#loading').show();"/></p>
+      
+         <datalist id="symbols"></datalist>
+         
+         <script type="text/javascript">
+           var arr = new Array();
+           arr = '{{stockSymbols}}'.split(" ");
+           var options = '';
+         
+           for(var i = 0; i < arr.length; i++)
+             options += '<option value="'+ arr[i]+'" />';
+         
+           document.getElementById('symbols').innerHTML = options;
+         </script>
+      </form>
+      <div id="loading" style="display:none;">
+         <label> Calculating stock predictions! </label>
+         <br>
+         <img src="/static/loading.gif" alt="" width="200px" height="200px"/>
+      </div>
+      <script src="http://tweetgrid.com/widget/widget.js" type="text/javascript"></script>   
+   </body>
+</html>
