@@ -1,0 +1,42 @@
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <style>
+       body{
+          background-color:#ccffff
+       }
+    </style>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    </head>
+
+<html>
+ <body>
+      <button class="btn btn-primary"><a style="color:white" href="http://localhost:5000/home">< Back</a></button>
+      <form>
+  <br>
+    <form action = "http://localhost:5000/login" method = "post">
+       <br>
+       <div class="container" align = "center">
+           <img src="/static/logo.png" alt="logo">
+       <div>
+      <div class = "container" align = "left">
+          <h3>What is StockTalk?</h3>
+          <br>
+          StockTalk is a web-based application that allows users to search any company currently being traded on the NASDAQ and collect data on that company such as its recent trading prices. Stocktalk revolutionizes the way people trade on the NASDAQ by tapping into a data source that has never been analyzed before to analyze stock performance: Twitter. Millions of tweets are sent out every day that contain important pieces of news that can boost or hurt a company. Using data modeling techniques, Stocktalk is able to quantify how what people are saying on Twitter will affect the company's trading price.
+          <br>
+          <br>
+          StockTalk was developed by Charlie Nash, a computer science student at DePauw University as his senior project.
+          <br>
+          <br>
+          <h3>How does it work?</h3>
+          <br>    
+          StockTalk utilizes a combination of gradient boosting and linear regressions to calculate its predictions. Using up to ten years of legacy stock data on each company, StockTalk creates a seven day forecast based on a linear regression. StockTalk then analyzes the past week's worth of tweets containing the company's name, and adjusts the predictions accordingly based on the content of the tweets. If the tweets generally speak positively about the company, the predictions tend to improve, while if the tweets speak negatively about the company, the predictions tend to decrease.
+          <br>
+          <br>
+          <h3>Is StockTalk open source?</h3>
+          <br>
+          Yes, all of the code to run StockTalk is open sourced on <a href = 'https://github.com/cnash99/stockTalk/tree/master/Senior%20Project'>Github</a>.
+      </div> 
+  </body>
+</html>

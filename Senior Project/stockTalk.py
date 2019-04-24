@@ -207,4 +207,17 @@ def run(name):
 #   plt.show()
   fileName = "static/graph.jpg"
   plt.savefig(fileName)
-  return {'company' : company, 'currentPrice' : currentPrice, 'totalVolume' : totalVolume, 'percentPos': percentPos, 'percentNeg' : percentNeg, 'first' : firstDayPredict, 'second' : secondDayPredict, 'third' : thirdDayPredict, 'fourth' : fourthDayPredict, 'fifth' : fifthDayPredict, 'sixth' : sixthDayPredict, 'seventh' : seventhDayPredict, 'advice' : advice}
+
+  displayTweets = tweets.iloc[0:10,9]
+  displayTweets1 = displayTweets.iloc[0]
+  displayTweets2 = displayTweets.iloc[1]
+  displayTweets3 = displayTweets.iloc[2]
+  displayTweets4 = displayTweets.iloc[3]
+  displayTweets5 = displayTweets.iloc[4]
+  displayTweets6 = displayTweets.iloc[5]
+  displayTweets7 = displayTweets.iloc[6]
+  displayTweets8 = displayTweets.iloc[7]
+  displayTweets9 = displayTweets.iloc[8]
+  displayTweets10 = displayTweets.iloc[9]
+
+  return {'company' : company, 'currentPrice' : currentPrice, 'totalVolume' : totalVolume, 'percentPos': percentPos, 'percentNeg' : percentNeg, 'first' : firstDayPredict, 'second' : secondDayPredict, 'third' : thirdDayPredict, 'fourth' : fourthDayPredict, 'fifth' : fifthDayPredict, 'sixth' : sixthDayPredict, 'seventh' : seventhDayPredict, 'advice' : advice, 'displayTweets1' : displayTweets1, 'displayTweets2' : displayTweets2, 'displayTweets3' : displayTweets3, 'displayTweets4' : displayTweets4, 'displayTweets5' : displayTweets5, 'displayTweets6' : displayTweets6, 'displayTweets7' : displayTweets7, 'displayTweets8' : displayTweets8, 'displayTweets9' : displayTweets9, 'displayTweets10' : displayTweets10}

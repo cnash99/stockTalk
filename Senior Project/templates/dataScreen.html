@@ -1,50 +1,62 @@
 <head>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-        <script src="http://tweetgrid.com/widget/widget.js" type="text/javascript"></script>
-        <style>
-                body{
-                   background-color:#ccffff
-                }
-        </style>
-        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="http://tweetgrid.com/widget/widget.js" type="text/javascript"></script>
+    <style>
+            body{
+               background-color:#ccffff
+            }
+    </style>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>    
-       <body>
-          <button class="btn btn-primary"><a style="color:white" href="http://localhost:5000/home">< Back</a></button>
-        <form>
-        <br>
-        <div align="center">
-                <img src="/static/logo.png" alt="logo" align = "middle">
-        <div>
-        <div class="container" align="left">
-            <h1>Data for {{ company }}</h1>
-          <br>
-          <label>The current trading price of {{ company }}, is {{ currentPrice }}</label>
-          <label>There have been {{ totalVolume }}, tweets about, {{ company }}, in the past week.</label>
-          <label>Of these tweets, {{ percentPos }}% spoke positively about the company while {{ percentNeg }}% spoke negatively about the company.</label>
-          <label>Based on our predictions, the trading prices of {{ company }}, over the next week will be:</label>
-          <br>
-          <label> {{ first }} </label>
-          <br>
-          <label> {{ second }} </label>
-          <br>
-          <label> {{ third }} </label>
-          <br>
-          <label> {{ fourth }} </label>
-          <br>
-          <label> {{ fifth }} </label>
-          <br>
-          <label> {{ sixth }} </label>
-          <br>
-          <label> {{ seventh }} </label>
-          <br>
-          <label> We suggest that you {{advice}} shares of this stock. </label>
-          <br>
-          <img src = "/static/graph.jpg" alt = "graph" width="500px" height="375px"></img>
-          
-          <script language="javascript">
-                /* widget config */
-                var jtw_search = 'keyword';  /* keywords or phrase to send to search.twitter.com and display */
-            </script>
-            <script src="http://tweetgrid.com/widget/widget.js" type="text/javascript"></script>       
-        </div>  
+   <body>
+      <button class="btn btn-primary"><a style="color:white" href="http://localhost:5000/home">< Back</a></button>
+    <form>
+    <br>
+    <div align="center">
+            <img src="/static/logo.png" alt="logo" align = "middle">
+    <div>
+    <div class="container" align="left">
+        <h1 align="center">Data for {{ company }}</h1>
+      <br>
+      <label>The current trading price of {{ company }}, is {{ currentPrice }}</label>
+      <label>There have been {{ totalVolume }}, tweets about, {{ company }}, in the past week.</label>
+      <label>Of these tweets, {{ percentPos }}% spoke positively about the company while {{ percentNeg }}% spoke negatively about the company.</label>
+      <label>Based on our predictions, the trading prices of {{ company }}, over the next week will be:</label>
+      <br>
+      <label> {{ first }} </label>
+      <br>
+      <label> {{ second }} </label>
+      <br>
+      <label> {{ third }} </label>
+      <br>
+      <label> {{ fourth }} </label>
+      <br>
+      <label> {{ fifth }} </label>
+      <br>
+      <label> {{ sixth }} </label>
+      <br>
+      <label> {{ seventh }} </label>
+      <br>
+      <label> We suggest that you {{advice}} shares of this stock. </label>
+      <br>
+      <img src = "/static/graph.jpg" alt = "graph" width="500px" height="375px"></img>
+    </div>  
+    <br>
+    <h3>Ten Most Recent Tweets about {{company}}</h3>
+    <br>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets1}}">{{displayTweets1}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets2}}">{{displayTweets2}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets3}}">{{displayTweets3}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets4}}">{{displayTweets4}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets5}}">{{displayTweets5}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets6}}">{{displayTweets6}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets7}}">{{displayTweets7}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets8}}">{{displayTweets8}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets9}}">{{displayTweets9}}</iframe>
+    <iframe border=0 frameborder=0 height=500 width=550 src="{{displayTweets10}}">{{displayTweets10}}</iframe>
+    </div>
+  <br>
+  <div class="footer" href="http://localhost:5000/home">
+     <p>Want to learn more about StockTalk? <a href="http://localhost:5000/about">Click Here!</a> </p>
+  </div>
